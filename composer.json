@@ -9,6 +9,7 @@
         "php": "^8.3",
         "intervention/image": "^4.0",
         "laravel/framework": "^13.7",
+        "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "setasign/fpdf": "^1.8",
         "setasign/fpdi": "^2.6",

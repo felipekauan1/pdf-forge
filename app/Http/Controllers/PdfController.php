@@ -19,7 +19,7 @@ class PdfController extends Controller
             'operation'         => $request->input('operation'),
             'status'            => 'pending',
             'original_filename' => $file->getClientOriginalName(),
-            'result_path'       => null,
+            'result_path'       => $path,
             'error_message'     => null,
         ]);
 

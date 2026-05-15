@@ -16,19 +16,29 @@ class PdfController extends Controller
 
     public function upload(UploadPdfRequest $request): JsonResponse
     {
-        $file = $request->file('file');
-        $path = $file->store('uploads', 'local');
+        $operation = $request->input('operation');
+        $files = $request->file('files');
+
+        // Salva todos os arquivos e coleta os caminhos
+        $paths = [];
+        foreach ($files as $file) {
+            $paths[] = $file->store('uploads', 'local');
+        }
 
         $task = PdfTask::create([
-            'operation'         => $request->input('operation'),
+            'operation'         => $operation,
             'status'            => 'processing',
-            'original_filename' => $file->getClientOriginalName(),
-            'result_path'       => $path,
+            'original_filename' => $files[0]->getClientOriginalName(),
+            'result_path'       => $paths[0],
             'error_message'     => null,
         ]);
 
         try {
-            $resultPath = $this->pdfService->compress($path);
+            $resultPath = match($operation) {
+                'compress' => $this->pdfService->compress($paths[0]),
+                'merge'    => $this->pdfService->merge($paths),
+                default    => throw new \Exception("Operação não implementada ainda."),
+            };
 
             $task->update([
                 'status'      => 'done',

@@ -7,6 +7,7 @@ use App\Http\Requests\UploadPdfRequest;
 use App\Jobs\ProcessPdfJob;
 use App\Models\PdfTask;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class PdfController extends Controller
 {
@@ -46,5 +47,25 @@ class PdfController extends Controller
             'result_path' => $task->result_path,
             'error'       => $task->error_message,
         ]);
+    }
+
+    public function download(PdfTask $task): mixed
+    {
+        if ($task->status !== 'done') {
+            return response()->json([
+                'message' => 'O arquivo ainda não está pronto.',
+                'status'  => $task->status,
+            ], 422);
+        }
+
+        $path = Storage::disk('local')->path($task->result_path);
+
+        if (!file_exists($path)) {
+            return response()->json([
+                'message' => 'Arquivo não encontrado.',
+            ], 404);
+        }
+
+        return response()->download($path);
     }
 }

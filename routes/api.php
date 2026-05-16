@@ -11,3 +11,5 @@ Route::get('/user', function (Request $request) {
 Route::post('/pdf/upload', [PdfController::class, 'upload']);
 
 Route::get('/pdf/status/{task}', [PdfController::class, 'status']);
+
+Route::get('/pdf/download/{task}', [PdfController::class, 'download']);

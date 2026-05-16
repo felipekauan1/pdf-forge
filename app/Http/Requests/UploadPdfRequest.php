@@ -14,11 +14,17 @@ class UploadPdfRequest extends FormRequest
 
     public function rules(): array
     {
-        $isMerge = $this->input('operation') === 'merge';
+        $operation = $this->input('operation');
+        $isMerge   = $operation === 'merge';
 
         return [
             'files'     => ['required', 'array', $isMerge ? 'min:2' : 'min:1'],
-            'files.*'   => ['required', 'file', 'mimes:pdf', 'max:20480'],
+            'files.*'   => [
+                'required',
+                'file',
+                'mimes:pdf,jpg,jpeg,png',
+                'max:20480',
+            ],
             'operation' => ['required', 'string', 'in:merge,split,compress,pdf_to_image,image_to_pdf'],
         ];
     }

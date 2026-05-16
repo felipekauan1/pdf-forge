@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use setasign\Fpdi\Fpdi;
 use Illuminate\Support\Facades\Storage;
 
 class PdfService
@@ -150,5 +151,46 @@ class PdfService
         }
 
         return $outputPaths;
+    }
+
+    public function imageToPdf(array $filePaths): string
+    {
+        $pdf = new Fpdi();
+
+        foreach ($filePaths as $filePath) {
+            $fullPath = Storage::disk('local')->path($filePath);
+
+            // Descobre as dimensões da imagem
+            [$width, $height] = getimagesize($fullPath);
+
+            // Converte pixels para mm (96 DPI padrão)
+            $widthMm  = ($width  / 96) * 25.4;
+            $heightMm = ($height / 96) * 25.4;
+
+            $orientation = $widthMm > $heightMm ? 'L' : 'P';
+
+            $pdf->AddPage($orientation, [$widthMm, $heightMm]);
+
+            // Detecta o tipo da imagem
+            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            $imageType = match($extension) {
+                'jpg', 'jpeg' => 'JPEG',
+                'png'         => 'PNG',
+                default       => 'JPEG',
+            };
+
+            $pdf->Image($fullPath, 0, 0, $widthMm, $heightMm, $imageType);
+        }
+
+        $outputPath     = 'processed/' . uniqid('img_to_pdf_') . '.pdf';
+        $fullOutputPath = Storage::disk('local')->path($outputPath);
+
+        if (!file_exists(dirname($fullOutputPath))) {
+            mkdir(dirname($fullOutputPath), 0755, true);
+        }
+
+        $pdf->Output($fullOutputPath, 'F');
+
+        return $outputPath;
     }
 }

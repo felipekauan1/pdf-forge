@@ -39,6 +39,7 @@ class PdfController extends Controller
                 'merge'    => $this->pdfService->merge($paths),
                 'split'    => implode(',', $this->pdfService->split($paths[0])),
                 'pdf_to_image' => implode(',', $this->pdfService->pdfToImage($paths[0])),
+                'image_to_pdf' => $this->pdfService->imageToPdf($paths),
                 default    => throw new \Exception("Operação não implementada ainda."),
             };
 

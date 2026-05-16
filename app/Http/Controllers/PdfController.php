@@ -58,12 +58,36 @@ class PdfController extends Controller
             ], 422);
         }
 
+        $paths = explode(',', $task->result_path);
+
+        // Se tiver múltiplos arquivos, compacta em ZIP
+        if (count($paths) > 1) {
+            $zipName    = 'pdf_forge_' . $task->id . '_' . $task->operation . '.zip';
+            $zipPath    = storage_path('app/private/processed/' . $zipName);
+
+            $zip = new \ZipArchive();
+
+            if ($zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+                return response()->json(['message' => 'Erro ao criar arquivo ZIP.'], 500);
+            }
+
+            foreach ($paths as $path) {
+                $fullPath = Storage::disk('local')->path(trim($path));
+                if (file_exists($fullPath)) {
+                    $zip->addFile($fullPath, basename($fullPath));
+                }
+            }
+
+            $zip->close();
+
+            return response()->download($zipPath)->deleteFileAfterSend(true);
+        }
+
+        // Arquivo único — download direto
         $path = Storage::disk('local')->path($task->result_path);
 
         if (!file_exists($path)) {
-            return response()->json([
-                'message' => 'Arquivo não encontrado.',
-            ], 404);
+            return response()->json(['message' => 'Arquivo não encontrado.'], 404);
         }
 
         return response()->download($path);

@@ -9,3 +9,5 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::post('/pdf/upload', [PdfController::class, 'upload']);
+
+Route::get('/pdf/status/{task}', [PdfController::class, 'status']);

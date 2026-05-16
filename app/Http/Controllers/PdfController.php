@@ -37,6 +37,7 @@ class PdfController extends Controller
             $resultPath = match($operation) {
                 'compress' => $this->pdfService->compress($paths[0]),
                 'merge'    => $this->pdfService->merge($paths),
+                'split'    => implode(',', $this->pdfService->split($paths[0])),
                 default    => throw new \Exception("Operação não implementada ainda."),
             };
 

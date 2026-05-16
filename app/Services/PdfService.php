@@ -2,8 +2,6 @@
 
 namespace App\Services;
 
-use setasign\Fpdi\Fpdi;
-use Spatie\PdfToImage\Pdf;
 use Illuminate\Support\Facades\Storage;
 
 class PdfService
@@ -119,5 +117,38 @@ class PdfService
         }
 
         return $pageCount;
+    }
+
+    public function pdfToImage(string $filePath): array
+    {
+        $fullPath  = Storage::disk('local')->path($filePath);
+        $pageCount = $this->countPages($fullPath);
+
+        if ($pageCount === 0) {
+            throw new \Exception("Não foi possível determinar o número de páginas do PDF.");
+        }
+
+        $outputPaths = [];
+
+        for ($i = 1; $i <= $pageCount; $i++) {
+            $outputPath     = 'processed/' . uniqid("img_{$i}_") . '.jpg';
+            $fullOutputPath = Storage::disk('local')->path($outputPath);
+
+            if (!file_exists(dirname($fullOutputPath))) {
+                mkdir(dirname($fullOutputPath), 0755, true);
+            }
+
+            $command = "gswin64c -dBATCH -dNOPAUSE -q -sDEVICE=jpeg -r150 -dFirstPage={$i} -dLastPage={$i} -sOutputFile=\"{$fullOutputPath}\" \"{$fullPath}\"";
+
+            exec($command, $output, $returnCode);
+
+            if ($returnCode !== 0) {
+                throw new \Exception("Erro ao converter página {$i} para imagem.");
+            }
+
+            $outputPaths[] = $outputPath;
+        }
+
+        return $outputPaths;
     }
 }
